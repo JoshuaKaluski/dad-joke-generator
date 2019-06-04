@@ -11,12 +11,11 @@ class Jokelist extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            jokes: []
+            jokes: JSON.parse(window.localStorage.getItem("jokes") || "[]")
         };
-
+        this.handleClick = this.handleClick.bind(this);
     }
-    async componentDidMount() {
-        //Load jokes
+    async getJokes() {
         let jokes = [];
 
         //Generates 10 jokes
@@ -26,15 +25,25 @@ class Jokelist extends Component {
         }
         console.log(jokes);
         //Set state jokes to local variable jokes (add the jokes to the state)
-        this.setState({jokes: jokes});
+        this.setState(st => ({
+            jokes: [...st.jokes, ...jokes]
+        }), () => window.localStorage.setItem("jokes", JSON.stringify(this.state.jokes)));
+    }
+    async componentDidMount() {
+        if (this.state.jokes.length === 0) {
+            this.getJokes();
+        }
     }
     handleVote(id, delta) {
         this.setState(
             st => ({
                 jokes: st.jokes.map(joke =>
                 joke.id === id ? {...joke, votes: joke.votes + delta} : joke)
-            })
-        )
+            }), () => window.localStorage.setItem("jokes", JSON.stringify(this.state.jokes))
+        );
+    }
+    handleClick(e) {
+        this.getJokes();
     }
     render() {
         return (
@@ -42,7 +51,7 @@ class Jokelist extends Component {
                 <div className="Jokelist-sidebar">
                     <h1 className="Jokelist-title"><span>Dad</span> Jokes</h1>
                     <img src="https://assets.dryicons.com/uploads/icon/svg/8927/0eb14c71-38f2-433a-bfc8-23d9c99b3647.svg" alt="Laughing emoji"/>
-                    <button className="Jokelist-new">New Jokes</button>
+                    <button className="Jokelist-new" onClick={this.handleClick}>New Jokes</button>
                 </div>
                 <div className="Jokelist-jokes">
                     {this.state.jokes.map(joke => (
